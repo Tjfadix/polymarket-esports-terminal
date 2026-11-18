@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>EsOps · Polymarket Esports Terminal</title>
+<link rel="stylesheet" href="/static/styles.css">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'><rect width='16' height='16' rx='3' fill='%230c1210'/><path d='M3 8h10M8 3v10' stroke='%2333ff99' stroke-width='2'/></svg>">
+</head>
+<body>
+<header id="topbar">
+  <div class="brand">
+    <span class="logo">◤</span>
+    <span class="name">ESOPS</span>
+    <span class="sub">polymarket · esports terminal</span>
+  </div>
+  <nav>
+    <button id="tab-board" class="tab active">BOARD</button>
+    <button id="tab-paper" class="tab">PAPER <span id="paper-dot" class="dot hidden"></span></button>
+  </nav>
+  <div class="status">
+    <span id="mode-badge" class="badge">…</span>
+    <span id="conn" class="conn"><span class="conn-dot"></span>connecting</span>
+    <span id="clock" class="clock">--:--:--</span>
+  </div>
+</header>
+
+<main id="view-board">
+  <section id="filters">
+    <input id="q" type="search" placeholder="filter team / event…" spellcheck="false">
+    <select id="game">
+      <option value="all">All games</option>
+      <option>Counter-Strike</option>
+      <option>League of Legends</option>
+      <option>Valorant</option>
+      <option>Dota 2</option>
+      <option>Rocket League</option>
+      <option>Overwatch</option>
+      <option>Esports</option>
+    </select>
+    <select id="minvol">
+      <option value="0">Any volume</option>
+      <option value="10000">$10k+ 24h</option>
+      <option value="50000">$50k+ 24h</option>
+      <option value="200000">$200k+ 24h</option>
+    </select>
+    <label class="chk"><input type="checkbox" id="only-trades"> only actionable</label>
+    <span class="spacer"></span>
+    <span id="rowcount" class="muted"></span>
+    <span id="refresh-in" class="muted"></span>
+  </section>
+
+  <section id="boardwrap">
+    <table id="board">
+      <thead>
+        <tr>
+          <th class="c-conv">SIGN</th>
+          <th class="c-side">SIDE</th>
+          <th class="c-px">ENTRY<span class="u">ask¢</span></th>
+          <th class="c-fair">FAIR<span class="u">model</span></th>
+          <th class="c-edge">EDGE<span class="u">net pts</span></th>
+          <th class="c-kelly">K<span class="u">½kelly</span></th>
+          <th class="c-market">MATCH</th>
+          <th class="c-game">GAME</th>
+          <th class="c-mom">1H<span class="u">Δ¢</span></th>
+          <th class="c-fac">BOOK<span class="u">imb</span></th>
+          <th class="c-fac">FLOW<span class="u">tape</span></th>
+          <th class="c-mom">MOM</th>
+          <th class="c-vol">VOL<span class="u">24h</span></th>
+          <th class="c-liq">LIQ</th>
+          <th class="c-spark">6H</th>
+        </tr>
+      </thead>
+      <tbody id="rows"></tbody>
+    </table>
+    <div id="board-empty" class="empty hidden">scanning upstream…</div>
+  </section>
+</main>
+
+<main id="view-paper" class="hidden">
+  <section class="paper-head">
+    <div class="stat"><label>EQUITY</label><b id="p-equity">–</b></div>
+    <div class="stat"><label>CASH</label><b id="p-cash">–</b></div>
+    <div class="stat"><label>RET</label><b id="p-ret">–</b></div>
+    <div class="stat"><label>REALIZED</label><b id="p-realized">–</b></div>
+    <div class="stat"><label>UNREALIZED</label><b id="p-unrealized">–</b></div>
+    <div class="stat"><label>FILLS</label><b id="p-fills">–</b></div>
+    <span class="spacer"></span>
+    <button id="p-reset" class="danger">RESET ACCOUNT</button>
+  </section>
+  <h3>OPEN POSITIONS</h3>
+  <table id="positions">
+    <thead><tr><th>MATCH</th><th>OUTCOME</th><th class="num">SHARES</th><th class="num">AVG</th><th class="num">MARK</th><th class="num">P&L</th><th></th></tr></thead>
+    <tbody></tbody>
+  </table>
+  <h3>FILL HISTORY</h3>
+  <table id="fills">
+    <thead><tr><th class="num">TIME</th><th>MATCH</th><th>SIDE</th><th class="num">SHARES</th><th class="num">PRICE</th><th class="num">FEE</th><th class="num">REALIZED</th></tr></thead>
+    <tbody></tbody>
+  </table>
+</main>
+
+<aside id="drawer" class="hidden">
+  <div class="drawer-head">
+    <button id="drawer-close" class="icon">×</button>
+    <h2 id="d-title">–</h2>
+    <div class="d-meta"><span id="d-game" class="badge"></span><span id="d-end" class="muted"></span></div>
+  </div>
+  <div id="d-signals" class="d-section">
+    <h4>SIGNAL STACK</h4>
+    <div id="d-factors"></div>
+    <div id="d-verdict"></div>
+  </div>
+  <div class="d-section d-cols">
+    <div><h4>YES BOOK</h4><div id="d-book-yes" class="ladder"></div></div>
+    <div><h4>PAPER TICKET</h4>
+      <div class="ticket">
+        <div class="oc-toggle"><button id="oc-yes" class="active">YES</button><button id="oc-no">NO</button></div>
+        <div class="t-row" id="t-quote"></div>
+        <label>Shares (USDC result payout)</label>
+        <input id="t-shares" type="number" value="50" min="1">
+        <div class="t-actions">
+          <button id="t-buy" class="buy">BUY</button>
+          <button id="t-sell" class="sell">SELL</button>
+        </div>
+        <label>Slippage preview</label>
+        <div id="t-slip" class="muted small">–</div>
+      </div>
+    </div>
+  </div>
+  <div class="d-section">
+    <h4>TAKER TAPE</h4>
+    <div id="d-tape" class="tape"></div>
+  </div>
+</aside>
+
+<div id="modal" class="hidden">
+  <div class="modal-card">
+    <button id="modal-close" class="icon">×</button>
+    <h2>Signal methodology</h2>
+    <div id="modal-body"></div>
+  </div>
+</div>
+
+<div id="toast" class="hidden"></div>
+<script src="/static/app.js"></script>
+</body>
+</html>
